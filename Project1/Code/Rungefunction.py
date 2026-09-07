@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 
+
+#Data
 rng = np.random.default_rng(2026)
 
 
@@ -89,6 +91,63 @@ print("Test R2",R2_test)
 
 #The train R2 is 0.9237913217985219
 #The test R2 is 0.3335873280577112
+
+
+degrees = range(1,16)
+
+train_mse = []
+test_mse = []
+train_R2 = []
+test_R2 =[]
+
+for degree in degrees:
+    #Design matrix
+    X_train = np.vander(x_train.ravel(), degree +1, increasing=True)
+    X_test = np.vander(x_test.ravel(), degree +1, increasing=True)
+
+    #OLS
+    theta = np.linalg.lstsq(X_train, y_train, rcond=None)[0]
+
+    #Predictions
+    y_train_pred = X_train @ theta
+    y_test_pred = X_test @ theta
+
+    #MSE
+
+    train_mse.append(MSE ( y_train,y_train_pred))
+    test_mse.append(MSE(y_test,y_test_pred))
+
+    #R2
+
+    train_R2.append(R2(y_train,y_train_pred))
+    test_R2.append (R2(y_test,y_test_pred))
+plt.plot(degrees, train_mse, marker="o", label="Training MSE")
+plt.plot(degrees, test_mse, marker="o", label="Test MSE")
+
+plt.xlabel("Polynomial degree")
+plt.ylabel("MSE")
+plt.legend()
+plt.show()
+
+plt.plot(degrees, train_R2, marker="o", label="Training R2")
+plt.plot(degrees, test_R2, marker="o", label="Test R2")
+
+plt.xlabel("Polynomial degree")
+plt.ylabel("R2")
+plt.legend()
+plt.show()
+
+#For the MSE
+#when the degree of polynomial increases then the MSE decreases.
+#But increases again for high degrees.
+
+
+#For R2
+#As the polynomial degree increases. R2 will also increases.
+#however for very high degrees the R2 decreases.
+
+
+
 
 #Part b
 
