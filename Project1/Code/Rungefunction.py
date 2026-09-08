@@ -52,7 +52,7 @@ X_test = np.vander(x_test.ravel(), degree +1, increasing=True) #Test
 
 #Find the OLS parameters
 
-theta = np.linalg.lstsq(X_train, y_train, rcond=None)[0]
+theta = np.linalg.pinv(X_train) @ y_train
 
 #Predictions
 
@@ -99,6 +99,7 @@ train_mse = []
 test_mse = []
 train_R2 = []
 test_R2 =[]
+theta_values = []
 
 for degree in degrees:
     #Design matrix
@@ -107,7 +108,7 @@ for degree in degrees:
 
     #OLS
     theta = np.linalg.lstsq(X_train, y_train, rcond=None)[0]
-
+    theta_values.append(theta)
     #Predictions
     y_train_pred = X_train @ theta
     y_test_pred = X_test @ theta
@@ -135,6 +136,31 @@ plt.plot(degrees, test_R2, marker="o", label="Test R2")
 plt.xlabel("Polynomial degree")
 plt.ylabel("R2")
 plt.legend()
+plt.show()
+#Plot theta values
+
+for j in range(6):
+
+    theta_j = []
+
+    degree_j = []
+
+    for degree in degrees:
+
+        if degree >= j:
+
+            theta_j.append(theta_values[degree-1][j])
+
+            degree_j.append(degree)
+
+    plt.plot(degree_j, theta_j, marker="o", label="theta_" + str(j))
+
+plt.xlabel("Polynomial degree")
+
+plt.ylabel("Theta")
+
+plt.legend()
+
 plt.show()
 
 #For the MSE
@@ -172,7 +198,7 @@ for n in n_values:
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=2026)
     X_train = np.vander(x_train.ravel(),degree + 1,increasing=True)
     X_test = np.vander(x_test.ravel(),degree + 1,increasing=True)
-    theta = np.linalg.lstsq(X_train,y_train,rcond=None)[0]
+    theta = np.linalg.pinv(X_train) @ y_train
 
     #Predictions
     y_train_pred = X_train @ theta
@@ -210,8 +236,10 @@ plt.ylabel("R2")
 plt.legend() 
 plt.show()
 
-
-
+#For different number of data points
+#When the number of data points increases, the training and test results become more stable.
+#With a small number of data points, there is a larger difference between training and test R2.
+#When the number of data points is large, the training and test R2 become close.
 
 
 #Try different sigma and use fixed n
@@ -276,6 +304,15 @@ plt.ylabel("R2")
 plt.legend()
 plt.show()
 
+#For different sigma values
+#When sigma is small, both the training and test MSE are small.
+#As sigma increases, both training and test MSE increase.
+#At the same time, training and test R2 decrease.
+#This means that more noise makes the model less accurate.
+
+
+
+
 #Different n and sigma
 #And increase the degree of polynomial
 
@@ -303,7 +340,7 @@ for degree in degree_values:
             X_train = np.vander(x_train.ravel(),degree + 1,increasing=True)
             X_test = np.vander(x_test.ravel(),degree + 1,increasing=True)
             #OLS
-            theta = np.linalg.lstsq(X_train,y_train,rcond=None)[0]
+            theta = np.linalg.pinv(X_train) @ y_train
             #Prediction
             y_train_pred = X_train @ theta
             y_test_pred = X_test @ theta
@@ -335,7 +372,7 @@ for degree in degree_values:
             X_test = np.vander(x_test.ravel(),degree + 1,increasing=True)
 
             #OLS
-            theta = np.linalg.lstsq(X_train,y_train,rcond=None)[0]
+            theta = np.linalg.pinv(X_train) @ y_train
 
             #Prediction
             y_train_pred = X_train @ theta
@@ -350,11 +387,78 @@ for degree in degree_values:
     plt.legend()
     plt.show()
 
-#Part b
+#For different polynomial degrees
+#With high polynomial degrees and a small number of data points, the test MSE can become very large.
+#The test R2 can also become very negative.
+#This shows that high-degree polynomial models are unstable when there are not enough data points.
+#Increasing the number of data points makes the model more stable.
 
-# Ridge using SVD
-def ridge_svd(X, y, lmbda):
 
-    U, s, Vt = np.linalg.svd(X,full_matrices=False)
 
-    return Vt.T @ (s / (s**2 + lmbda) * (U.T @ y))
+#Scaling and centering
+n = 100
+sigma = 0.1
+degree = 15
+x = np.linspace(-1,1,n)
+
+y_true = Runge_function(x)
+noise = sigma * rng.standard_normal(n)
+y = y_true + noise
+x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.2,random_state=2026)
+X_train = np.vander(x_train.ravel(),degree + 1,increasing=True)
+X_test = np.vander(x_test.ravel(),degree + 1,increasing=True)
+mean_X = np.mean(X_train[:,1:], axis=0)
+std_X = np.std(X_train[:,1:], axis=0)
+
+
+X_train_scaled = X_train.copy()
+X_test_scaled = X_test.copy()
+X_train_scaled[:,1:] = (X_train[:,1:] - mean_X) / std_X
+X_test_scaled[:,1:] = (X_test[:,1:] - mean_X) / std_X
+
+
+theta_scaled = np.linalg.pinv(X_train_scaled) @ y_train
+
+#Prediction
+y_train_pred_scaled = X_train_scaled @ theta_scaled
+y_test_pred_scaled = X_test_scaled @ theta_scaled
+
+#MSE
+
+mse_train_scaled = MSE(y_train,y_train_pred_scaled)
+
+mse_test_scaled = MSE(y_test,y_test_pred_scaled)
+
+#R2
+R2_train_scaled = R2(y_train,y_train_pred_scaled)
+R2_test_scaled = R2(y_test,y_test_pred_scaled)
+#OLS without scaling
+
+theta_unscaled = np.linalg.pinv(X_train) @ y_train
+
+y_train_pred_unscaled = X_train @ theta_unscaled
+y_test_pred_unscaled = X_test @ theta_unscaled
+
+mse_train_unscaled = MSE(y_train,y_train_pred_unscaled)
+mse_test_unscaled = MSE(y_test,y_test_pred_unscaled)
+
+R2_train_unscaled = R2(y_train,y_train_pred_unscaled)
+R2_test_unscaled = R2(y_test,y_test_pred_unscaled)
+
+print("Unscaled Train MSE =", mse_train_unscaled)
+print("Unscaled Test MSE =", mse_test_unscaled)
+print("Unscaled Train R2 =", R2_train_unscaled)
+print("Unscaled Test R2 =", R2_test_unscaled)
+
+print()
+
+print("Scaled Train MSE =", mse_train_scaled)
+print("Scaled Test MSE =", mse_test_scaled)
+print("Scaled Train R2 =", R2_train_scaled)
+print("Scaled Test R2 =", R2_test_scaled)
+
+
+
+#The scaled and unscaled OLS results are almost identical.
+#Scaling does not change the prediction much, but it can improve numerical stability.
+#The mean and standard deviation are computed only from the training data to avoid data leakage.
