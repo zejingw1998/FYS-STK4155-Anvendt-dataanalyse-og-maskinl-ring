@@ -38,19 +38,80 @@ for degree in range(1,degree_test +1):
 
 #Compute the parameter.
 
-thetha_1C = torch.linalg.pinv(X_train)@ y_train
+    thetha_1C = torch.linalg.pinv(X_train)@ y_train
 
 
 #Prediction
 
-y_train_PRED_1C = x_train @ thetha_1C
-y_test_PRED_1C = x_test @thetha_1C
+    y_train_PRED_1C = X_train @ thetha_1C
+    y_test_PRED_1C = X_test @thetha_1C
 
-MSE_1C_train = MSE(y_train,y_train_PRED_1C)
-MSE_1C_test =  MSE(y_test, y_test_PRED_1C)
-
-print("Train MSE", MSE_1C_train)
-print("Test MSE", MSE_1C_test)
-
+    MSE_1C_train = MSE(y_train,y_train_PRED_1C)
+    MSE_1C_test =  MSE(y_test, y_test_PRED_1C)
+    train_MSE.append(MSE_1C_train.item())
+    test_MSE.append(MSE_1C_test.item())
 
 
+
+    """print("Train MSE", MSE_1C_train)"""
+    """print("Test MSE", MSE_1C_test)"""
+
+degrees = range(1, degree_test + 1)
+
+plt.plot(degrees, train_MSE, label="Train MSE")
+plt.plot(degrees, test_MSE, label="Test MSE")
+plt.xlabel("Polynomial degree")
+plt.ylabel("MSE")
+plt.legend()
+plt.show()
+
+maxDegree = 30
+n_bootstraps_1C = 100
+
+Error_1C = torch.zeros(maxDegree, dtype=torch.float64)
+Bias_1C = torch.zeros(maxDegree, dtype=torch.float64)
+Variance_1C = torch.zeros(maxDegree, dtype=torch.float64)
+
+# Define the polynomial with degree 0-29
+for degree in range(1,maxDegree+1):
+
+    X_test_boot_1C = torch.vander(x_test, degree + 1, increasing=True)
+
+    predictions = torch.zeros((len(x_test), n_bootstraps_1C), dtype=torch.float64)
+
+    for i in range(n_bootstraps_1C):
+
+        # Bootstrap sampling
+        bootstrap_1C = torch.randint(0, len(x_train), (len(x_train),))
+
+        x_boot_1C = x_train[bootstrap_1C]
+        y_boot_1C = y_train[bootstrap_1C]
+
+        # Design matrix
+        X_bootstrap_1C = torch.vander(x_boot_1C, degree + 1, increasing=True)
+
+        # OLS
+        theta_boot_1C = torch.linalg.pinv(X_bootstrap_1C) @ y_boot_1C
+
+        # Prediction
+        y_boot_1C_pred = X_test_boot_1C @ theta_boot_1C
+
+        # Store prediction
+        predictions[:, i] = y_boot_1C_pred
+
+    # Mean prediction from the 100 bootstrap models
+    mean_prediction = torch.mean(predictions, dim=1)
+    # Error, Bias^2 and Variance
+    Error_1C[degree - 1] = torch.mean((y_test[:, None] - predictions)**2)
+    Bias_1C[degree - 1] = torch.mean((y_test - mean_prediction)**2)
+    Variance_1C[degree - 1] = torch.mean(torch.var(predictions, dim=1, correction=0))
+degrees = range(1, maxDegree + 1)
+
+plt.plot(degrees, Error_1C, label="Test error")
+plt.plot(degrees, Bias_1C, label="Bias squared")
+plt.plot(degrees, Variance_1C, label="Variance")
+plt.xlabel("Polynomial degree")
+plt.ylabel("MSE")
+plt.yscale("log")
+plt.legend()
+plt.show()
