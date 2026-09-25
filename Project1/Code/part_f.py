@@ -1,339 +1,153 @@
 import torch
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from Rungefunction import Runge_function, MSE, R2
-
-# Part f
-
-torch.manual_seed(2026)
-
-n = 100
-sigma = 0.1
-
-x = torch.linspace(-1,1,n,dtype=torch.float64)
-y = Runge_function(x) + sigma*torch.randn(n,dtype=torch.float64)
-
-x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.3,random_state=2026)
-
-degree = 5
-
-X_train = torch.vander(x_train,degree+1,increasing=True)
-X_test = torch.vander(x_test,degree+1,increasing=True)
+import part_e as PE  
 
 
-def OLS_Gradient(X,y,theta):
-    n = len(y)
-    return (2/n)*X.T@(X@theta-y)
+
+method = ["plain","momentum","adagrad","rmsprop","adam"]
 
 
-def Ridge_Gradient(X,y,theta,lmbda):
-    n = len(y)
-    return (2/n)*X.T@(X@theta-y)+(2*lmbda/n)*theta
+learning_rate_F = 0.01
+
+iterations = 10000
+
+theta_Task_1F = torch.zeros(PE.X_train.shape[1],dtype=torch.float64)
 
 
-def optimiser_step(method,theta,g,state,t,learning_rate,beta=0.9,rho=0.99,beta1=0.9,beta2=0.999,epsilon=1e-8):
-
-    if method == "plain":
-        return theta-learning_rate*g,state
-
-    if method == "momentum":
-        if "v" not in state:
-            state["v"] = torch.zeros_like(theta)
-
-        state["v"] = beta*state["v"]+learning_rate*g
-
-        return theta-state["v"],state
-
-    if method == "adagrad":
-        if "r" not in state:
-            state["r"] = torch.zeros_like(theta)
-
-        state["r"] = state["r"]+g**2
-
-        return theta-learning_rate*g/(torch.sqrt(state["r"])+epsilon),state
-
-    if method == "rmsprop":
-        if "r" not in state:
-            state["r"] = torch.zeros_like(theta)
-
-        state["r"] = rho*state["r"]+(1-rho)*g**2
-
-        return theta-learning_rate*g/(torch.sqrt(state["r"])+epsilon),state
-
-    if method == "adam":
-        if "m" not in state:
-            state["m"] = torch.zeros_like(theta)
-
-        if "r" not in state:
-            state["r"] = torch.zeros_like(theta)
-
-        state["m"] = beta1*state["m"]+(1-beta1)*g
-        state["r"] = beta2*state["r"]+(1-beta2)*g**2
-
-        m_hat = state["m"]/(1-beta1**t)
-        r_hat = state["r"]/(1-beta2**t)
-
-        return theta-learning_rate*m_hat/(torch.sqrt(r_hat)+epsilon),state
-
-    raise ValueError("Unknown method")
+grad_OLS_F = lambda theta: PE.OLS_Gradient( PE.X_train, PE.y_train, theta )
 
 
-def optimise(gradient_function,theta0,method,learning_rate,iterations=10000,tol=1e-8,**kw):
 
-    theta = theta0.clone().detach()
-    state = {}
-    history = [theta.clone()]
+def optimise(grad_func,theta_Task_1F,method,learning_rate,iterations):
 
-    for t in range(1,iterations+1):
+    theta = theta_Task_1F.clone()
 
-        gradient = gradient_function(theta)
+    history = []
 
-        theta,state = optimiser_step(method,theta,gradient,state,t,learning_rate,**kw)
+
+    # Momentum
+    beta = 0.9
+    velocity = torch.zeros_like(theta)
+
+
+    # AdaGrad
+    G = torch.zeros_like(theta)
+
+
+    # RMSprop
+    rho = 0.9
+    S = torch.zeros_like(theta)
+
+
+    # Adam
+    beta1 = 0.9
+    beta2 = 0.999
+    m = torch.zeros_like(theta)
+    v = torch.zeros_like(theta)
+
+
+    epsilon = 1e-8
+
+
+    for i in range(iterations):
+
+        gradient = grad_func(theta)
+
+
+        if method == "plain":
+
+            theta = theta-learning_rate*gradient
+
+
+        elif method == "momentum":
+
+            velocity = beta*velocity+gradient
+
+            theta = theta-learning_rate*velocity
+
+
+        elif method == "adagrad":
+
+            G = G+gradient**2
+
+            theta = theta-learning_rate*gradient/(torch.sqrt(G)+epsilon)
+
+
+        elif method == "rmsprop":
+
+            S = rho*S+(1-rho)*gradient**2
+
+            theta = theta-learning_rate*gradient/(torch.sqrt(S)+epsilon)
+
+
+        elif method == "adam":
+
+            m = beta1*m+(1-beta1)*gradient
+
+            v = beta2*v+(1-beta2)*gradient**2
+
+
+            m_hat = m/(1-beta1**(i+1))
+
+            v_hat = v/(1-beta2**(i+1))
+
+
+            theta = theta-learning_rate*m_hat/(torch.sqrt(v_hat)+epsilon)
+
 
         history.append(theta.clone())
 
-        if torch.norm(gradient) < tol:
-            break
 
-    return torch.stack(history),t
+    return history
 
+OLS_HISTORY_F = {}
 
-# Closed form
+for methods in method:
 
-theta_OLS_closed = torch.linalg.pinv(X_train)@y_train
+    history = optimise(grad_OLS_F,theta_Task_1F,methods,learning_rate_F,iterations)
 
-lmbda = 0.01
+    OLS_HISTORY_F[methods] = history
 
-I = torch.eye(X_train.shape[1],dtype=torch.float64)
-
-theta_Ridge_closed = torch.linalg.solve(X_train.T@X_train+lmbda*I,X_train.T@y_train)
-
-
-# Gradient functions
-
-grad_OLS = lambda theta: OLS_Gradient(X_train,y_train,theta)
-grad_Ridge = lambda theta: Ridge_Gradient(X_train,y_train,theta,lmbda)
-
-theta0 = torch.zeros(X_train.shape[1],dtype=torch.float64)
-
-methods = ["plain","momentum","adagrad","rmsprop","adam"]
-
-learning_rate = 0.01
-iterations = 10000
-
-
-# OLS
-
-OLS_histories = {}
-OLS_steps = {}
-
-for method in methods:
-
-    history,steps = optimise(grad_OLS,theta0,method,learning_rate,iterations=iterations)
-
-    OLS_histories[method] = history
-    OLS_steps[method] = steps
-
-
-# Ridge
-
-Ridge_histories = {}
-Ridge_steps = {}
-
-for method in methods:
-
-    history,steps = optimise(grad_Ridge,theta0,method,learning_rate,iterations=iterations)
-
-    Ridge_histories[method] = history
-    Ridge_steps[method] = steps
-
-
-# Compare with closed form
-
-print("OLS")
-
-for method in methods:
-
-    theta_final = OLS_histories[method][-1]
-    difference = torch.norm(theta_final-theta_OLS_closed)
-
-    print(method,"iterations =",OLS_steps[method],"difference =",difference.item())
-
-
-print("Ridge")
-
-for method in methods:
-
-    theta_final = Ridge_histories[method][-1]
-    difference = torch.norm(theta_final-theta_Ridge_closed)
-
-    print(method,"iterations =",Ridge_steps[method],"difference =",difference.item())
-
-
-def iterations_to_target(history,theta_closed,tol=1e-4):
-
-    distance = torch.norm(history-theta_closed,dim=1)
-    indices = torch.where(distance < tol)[0]
-
-    if len(indices) == 0:
-        return None
-
-    return indices[0].item()
-
-
-print("OLS iterations to target")
-
-for method in methods:
-
-    target_iteration = iterations_to_target(OLS_histories[method],theta_OLS_closed)
-
-    print(method,"=",target_iteration)
-
-
-print("Ridge iterations to target")
-
-for method in methods:
-
-    target_iteration = iterations_to_target(Ridge_histories[method],theta_Ridge_closed)
-
-    print(method,"=",target_iteration)
-
-
-# OLS convergence
-
-for method in methods:
-
-    distance = torch.norm(OLS_histories[method]-theta_OLS_closed,dim=1)
-
-    plt.plot(distance,label=method)
-
-plt.xlabel("Iteration")
-plt.ylabel("Distance to closed-form OLS")
-plt.yscale("log")
-plt.legend()
-plt.show()
-
-
-# Ridge convergence
-
-for method in methods:
-
-    distance = torch.norm(Ridge_histories[method]-theta_Ridge_closed,dim=1)
-
-    plt.plot(distance,label=method)
-
-plt.xlabel("Iteration")
-plt.ylabel("Distance to closed-form Ridge")
-plt.yscale("log")
-plt.legend()
-plt.show()
-
-
-def MSE_history(history,X,y):
-
-    mse_values = []
+    MSE_VALUES_F = []
 
     for theta in history:
 
-        y_pred = X@theta
-        mse_values.append(MSE(y,y_pred).item())
+        y_pred = PE.X_train@theta
 
-    return mse_values
+        MSE_E = PE.MSE(PE.y_train,y_pred)
 
+        MSE_VALUES_F.append(MSE_E.item())
 
-# OLS MSE
-
-for method in methods:
-
-    mse_values = MSE_history(OLS_histories[method],X_train,y_train)
-
-    plt.plot(mse_values,label=method)
+    plt.plot(MSE_VALUES_F,label=methods)
 
 plt.xlabel("Iteration")
 plt.ylabel("Training MSE")
 plt.yscale("log")
+plt.title("OLS optimizer comparison")
 plt.legend()
 plt.show()
 
 
-# Ridge MSE
 
-for method in methods:
+theta_closed_F = torch.linalg.pinv(PE.X_train)@PE.y_train
 
-    mse_values = MSE_history(Ridge_histories[method],X_train,y_train)
+print("OLS optimizer results")
 
-    plt.plot(mse_values,label=method)
-
-plt.xlabel("Iteration")
-plt.ylabel("Training MSE")
-plt.yscale("log")
-plt.legend()
-plt.show()
-
-
-# Test results
-
-print("OLS test results")
-
-for method in methods:
-
-    theta_final = OLS_histories[method][-1]
-    y_pred = X_test@theta_final
-
-    test_mse = MSE(y_test,y_pred)
-    test_r2 = R2(y_test,y_pred)
-
-    print(method,"MSE =",test_mse.item(),"R2 =",test_r2.item())
+for methods in method:
+    theta_final = OLS_HISTORY_F[methods][-1]
+    difference = torch.norm(theta_final-theta_closed_F)
+    y_pred_test = PE.X_test@theta_final
+    test_MSE = PE.MSE(PE.y_test,y_pred_test)
+    test_R2 = PE.R2(PE.y_test,y_pred_test)
+    print(methods,"Difference =",difference.item(),"Test MSE =",test_MSE.item(),"Test R2 =",test_R2.item())
 
 
-print("Ridge test results")
 
-for method in methods:
-
-    theta_final = Ridge_histories[method][-1]
-    y_pred = X_test@theta_final
-
-    test_mse = MSE(y_test,y_pred)
-    test_r2 = R2(y_test,y_pred)
-
-    print(method,"MSE =",test_mse.item(),"R2 =",test_r2.item())
-
-
-# Learning rate comparison
-
-learning_rates = [0.001,0.01,0.1]
-
-for method in methods:
-
-    for learning_rate_test in learning_rates:
-
-        history,steps = optimise(grad_OLS,theta0,method,learning_rate_test,iterations=iterations)
-
-        distance = torch.norm(history-theta_OLS_closed,dim=1)
-
-        plt.plot(distance,label=f"{learning_rate_test}")
-
-    plt.xlabel("Iteration")
-    plt.ylabel("Distance to closed-form OLS")
-    plt.yscale("log")
-    plt.title(method)
-    plt.legend()
-    plt.show()
-
-
-for method in methods:
-
-    for learning_rate_test in learning_rates:
-
-        history,steps = optimise(grad_Ridge,theta0,method,learning_rate_test,iterations=iterations)
-
-        distance = torch.norm(history-theta_Ridge_closed,dim=1)
-
-        plt.plot(distance,label=f"{learning_rate_test}")
-
-    plt.xlabel("Iteration")
-    plt.ylabel("Distance to closed-form Ridge")
-    plt.yscale("log")
-    plt.title(method)
-    plt.legend()
-    plt.show()
+"""
+OLS optimizer results
+plain Difference = 2.165186311179708 Test MSE = 0.027674597212556145 Test R2 = 0.6829961327936647
+momentum Difference = 0.44953710463287744 Test MSE = 0.037147630018420356 Test R2 = 0.5744855008026429
+adagrad Difference = 1.7373779592749174 Test MSE = 0.023981074702621688 Test R2 = 0.7253042795128388
+rmsprop Difference = 0.012247428071207267 Test MSE = 0.04398676921769729 Test R2 = 0.4961452974066717
+adam Difference = 1.9242852429771378e-10 Test MSE = 0.0429821551751931 Test R2 = 0.5076528374831404
+"""
