@@ -192,17 +192,10 @@ for n in n_diff:
 
 # Conclusion
 
-# When we increase the polynomial degree, the test MSE starts to increase rapidly when the degree is greater than about 24.
+# The test MSE increases rapidly for high polynomial degrees, while the training MSE remains small, which indicates overfitting.
 
-# However, the training MSE remains very small and changes only slightly as the polynomial degree increases.
+# The variance also increases as the polynomial degree increases.
 
-# This indicates overfitting: the model fits the training data very well, but performs poorly on unseen test data.
+# With more data points, the variance becomes smaller and the model becomes more stable.
 
-
-#For low polynomial degrees, the variance is small because the model is simple.
-
-#As the polynomial degree increases, the variance increases because the model becomes more sensitive to changes in the training data.
-
-#For very high polynomial degrees, the variance and test error increase dramatically, showing strong overfitting and numerical instability.
-
-#Therefore, increasing model complexity can reduce underfitting at first, but too much complexity leads to high variance and poor generalization.
+# Therefore, high model complexity can cause overfitting, while more training data can reduce variance.

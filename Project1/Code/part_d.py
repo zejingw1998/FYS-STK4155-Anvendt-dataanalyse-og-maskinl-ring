@@ -3,12 +3,6 @@ import matplotlib.pyplot as plt
 from Rungefunction import Runge_function, MSE, R2
 from sklearn.model_selection import KFold
 
-
-
-print(torch.cuda.is_available())
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
 torch.manual_seed(2026)
 
 
