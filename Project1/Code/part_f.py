@@ -50,24 +50,19 @@ def optimise(grad_func,theta_Task_1F,method,learning_rate,iterations):
 
 
     for i in range(iterations):
-
         gradient = grad_func(theta)
 
 
         if method == "plain":
-
             theta = theta-learning_rate*gradient
 
 
         elif method == "momentum":
-
-            velocity = beta*velocity+gradient
-
-            theta = theta-learning_rate*velocity
+            velocity = beta*velocity + learning_rate* gradient
+            theta = theta - velocity
 
 
         elif method == "adagrad":
-
             G = G+gradient**2
 
             theta = theta-learning_rate*gradient/(torch.sqrt(G)+epsilon)
@@ -384,3 +379,4 @@ adagrad Difference = 0.02126565020064803 Test MSE = 0.04132840942824244 Test R2 
 rmsprop Difference = 0.011180336130718374 Test MSE = 0.04058018562964669 Test R2 = 0.5351666483979598
 adam Difference = 0.0020882333030381624 Test MSE = 0.04248322412216095 Test R2 = 0.5133679368598627
 """
+
