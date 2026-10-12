@@ -86,10 +86,83 @@ for L1B in learning_Rate_1B:
 
     print("Val MSE",val_mse)
 
+    plot.plot(history, label=f"lr={L1B}")
 
-
+plot.xlabel("Epoch")
+plot.ylabel("Training MSE")
+plot.title("Different Learning Rates")
+plot.legend()
+plot.grid(True)
+plot.show()
 
 #Adam
+
+learning_Rate_Adam = [0.0001, 0.001, 0.01]
+
+for lr in learning_Rate_Adam:
+
+    torch.manual_seed(2026)
+
+    model = NeuralNetwork([1,50,1])
+
+    m_w = [torch.zeros_like(w) for w in model.weights]
+    v_w = [torch.zeros_like(w) for w in model.weights]
+    m_b = [torch.zeros_like(b) for b in model.biases]
+    v_b = [torch.zeros_like(b) for b in model.biases]
+
+    beta1 = 0.9
+    beta2 = 0.999
+    eps = 1e-8
+    t = 0
+    history = []
+
+    for epoch in range(300):
+
+        indices = torch.randperm(X_train.shape[0])
+
+        for batch in indices.split(10):
+
+            model.backpropagation(X_train[batch], y_train[batch])
+            t += 1
+
+            for i in range(len(model.weights)):
+
+                gw = model.grad_weights[i]
+                gb = model.grad_biases[i]
+
+                m_w[i] = beta1 * m_w[i] + (1-beta1) * gw
+                v_w[i] = beta2 * v_w[i] + (1-beta2) * gw**2
+
+                m_b[i] = beta1 * m_b[i] + (1-beta1) * gb
+                v_b[i] = beta2 * v_b[i] + (1-beta2) * gb**2
+
+                mw_hat = m_w[i] / (1-beta1**t)
+                vw_hat = v_w[i] / (1-beta2**t)
+
+                mb_hat = m_b[i] / (1-beta1**t)
+                vb_hat = v_b[i] / (1-beta2**t)
+
+                model.weights[i] -= lr * mw_hat / (torch.sqrt(vw_hat) + eps)
+                model.biases[i] -= lr * mb_hat / (torch.sqrt(vb_hat) + eps)
+
+        history.append(MSE(y_train, model.predict(X_train)).item())
+
+    train_mse = MSE(y_train, model.predict(X_train)).item()
+    val_mse = MSE(y_val, model.predict(X_val)).item()
+
+    print("Adam Learning Rate:", lr)
+    print("Train MSE:", train_mse)
+    print("Val MSE:", val_mse)
+
+    plot.plot(history, label=f"Adam lr={lr}")
+
+plot.xlabel("Epoch")
+plot.ylabel("Training MSE")
+plot.title("Adam Learning Rates")
+plot.legend()
+plot.grid(True)
+plot.show()
+
 
 
 #RMS
@@ -98,3 +171,9 @@ for L1B in learning_Rate_1B:
 
 
 
+"""
+Epoch 100, MSE: 0.088513
+Epoch 200, MSE: 0.088330
+Train MSE: 0.08829797804355621
+Test MSE: 0.11863492429256439
+"""
