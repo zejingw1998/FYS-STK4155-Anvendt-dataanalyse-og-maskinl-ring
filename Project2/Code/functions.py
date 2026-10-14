@@ -1,16 +1,10 @@
 import torch 
 
-
-
-
-
 #Runge function
 
 
 def Rungefunction(x):
     return 1.0/(1.0+25.0*x**2)
-
-
 
 
 #Activation functions
@@ -55,9 +49,22 @@ def MSEDerivative(y_true,y_pred):
     return 2.0*(y_pred-y_true)/n
 
 
+#ReLU
+
+def relu(z):
+    return torch.clamp(z, min=0)
+
+def reluDerivative(z):
+    return (z > 0).to(z.dtype)
 
 
+#Leaky ReLU
 
+def leakyRelu(z):
+    return torch.where(z > 0, z, 0.01 * z)
+
+def leakyReluDerivative(z):
+    return torch.where(z > 0, torch.ones_like(z), torch.full_like(z, 0.01))
 
 
 
@@ -76,3 +83,7 @@ if __name__ == "__main__":
 
     print("\nSigmoid derivative:")
     print(sigmoidDerivative(x))
+
+
+    print("!")
+    print(reluDerivative(x))

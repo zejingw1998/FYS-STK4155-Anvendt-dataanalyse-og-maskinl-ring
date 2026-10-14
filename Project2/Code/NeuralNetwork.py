@@ -1,6 +1,5 @@
-
 import torch
-from functions import sigmoid, sigmoidDerivative, linear, linearDerivative, MSE, MSEDerivative
+from functions import sigmoid, sigmoidDerivative, linear, linearDerivative, MSE, MSEDerivative, relu, reluDerivative, leakyRelu, leakyReluDerivative
 
 
 class NeuralNetwork:
@@ -12,28 +11,46 @@ class NeuralNetwork:
         self.weights = []
         self.biases = []
 
-
+        self.activation = sigmoid
+        self.activationDerivative = sigmoidDerivative
 
         for n_in, n_out in zip(layer_sizes[:-1], layer_sizes[1:]):
 
             std = (2.0 / (n_in + n_out)) ** 0.5
 
             w = torch.randn(n_in, n_out) * std
-
             b = torch.zeros(1, n_out)
 
             self.weights.append(w)
-
             self.biases.append(b)
+
+
+    # Activation function
+
+    def set_activation(self, activation):
+
+        if activation == "sigmoid":
+            self.activation = sigmoid
+            self.activationDerivative = sigmoidDerivative
+
+        elif activation == "relu":
+            self.activation = relu
+            self.activationDerivative = reluDerivative
+
+        elif activation == "leaky_relu":
+            self.activation = leakyRelu
+            self.activationDerivative = leakyReluDerivative
+
+        else:
+            raise ValueError("Unknown activation function")
+
 
     # Feed forward
 
     def feedforward(self, X):
 
         a = X
-
         self.activations = [X]
-
         self.z_values = []
 
         for i in range(len(self.weights)):
@@ -43,20 +60,17 @@ class NeuralNetwork:
             self.z_values.append(z)
 
             if i == len(self.weights) - 1:
-
                 a = linear(z)
 
             else:
-
-                a = sigmoid(z)
+                a = self.activation(z)
 
             self.activations.append(a)
 
         return a
 
-    
-    # Backpropagation
 
+    # Backpropagation
 
     def backpropagation(self, X, y):
 
@@ -65,11 +79,9 @@ class NeuralNetwork:
         # Initialize gradients
 
         self.grad_weights = [torch.zeros_like(w) for w in self.weights]
-
         self.grad_biases = [torch.zeros_like(b) for b in self.biases]
 
         # Output layer
-
 
         delta = MSEDerivative(y, y_pred) * linearDerivative(self.z_values[-1])
 
@@ -78,15 +90,14 @@ class NeuralNetwork:
         for i in reversed(range(len(self.weights))):
 
             self.grad_weights[i] = self.activations[i].T @ delta
-
             self.grad_biases[i] = torch.sum(delta, dim=0, keepdim=True)
 
             if i > 0:
-
-                delta = (delta @ self.weights[i].T) * sigmoidDerivative(self.z_values[i - 1])
+                delta = (delta @ self.weights[i].T) * self.activationDerivative(self.z_values[i - 1])
 
         return MSE(y, y_pred).item()
-    
+
+
     # Gradient
 
     def gradient(self, learning_rate):
@@ -94,8 +105,8 @@ class NeuralNetwork:
         for i in range(len(self.weights)):
 
             self.weights[i] -= learning_rate * self.grad_weights[i]
-
             self.biases[i] -= learning_rate * self.grad_biases[i]
+
 
     # Training
 
@@ -104,13 +115,11 @@ class NeuralNetwork:
         n = X.shape[0]
 
         if batch_size is None:
-
             batch_size = n
 
         if batch_size <= 0:
-
             raise ValueError("batch_size must be positive")
-        
+
         history = []
 
         for epoch in range(epochs):
@@ -120,13 +129,11 @@ class NeuralNetwork:
             indices = torch.randperm(n)
 
             X_shuffled = X[indices]
-
             y_shuffled = y[indices]
 
             for start in range(0, n, batch_size):
 
                 X_batch = X_shuffled[start:start + batch_size]
-
                 y_batch = y_shuffled[start:start + batch_size]
 
                 # Backpropagation
@@ -140,20 +147,18 @@ class NeuralNetwork:
             # Calculate training loss
 
             y_pred = self.feedforward(X)
-
             loss = MSE(y, y_pred).item()
 
             history.append(loss)
 
             if epoch % 100 == 0:
-
                 print(f"Epoch {epoch}, MSE: {loss:.6f}")
 
         return history
-    
+
+
     # Prediction
 
     def predict(self, X):
 
-        
         return self.feedforward(X)

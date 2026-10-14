@@ -1,9 +1,9 @@
+
 import torch
-import  matplotlib.pyplot as plot 
-from functions import sigmoid, sigmoidDerivative, linear,linearDerivative,MSE,MSEDerivative,Rungefunction
+import matplotlib.pyplot as plt
+from functions import sigmoid, sigmoidDerivative, linear, linearDerivative, MSE, MSEDerivative, Rungefunction
 from NeuralNetwork import NeuralNetwork
 from sklearn.model_selection import train_test_split
-
 
 torch.manual_seed(2026)
 
@@ -20,28 +20,25 @@ X_train = (X_train - mu) / std
 X_val = (X_val - mu) / std
 X_test = (X_test - mu) / std
 
-
 model = NeuralNetwork([1, 50, 1])
 history = model.train(X_train, y_train, epochs=300, learning_rate=0.01, batch_size=10)
 
 print("Train MSE:", MSE(y_train, model.predict(X_train)).item())
 print("Test MSE:", MSE(y_test, model.predict(X_test)).item())
 
-plot.plot(history)
-plot.xlabel("Epoch")
-plot.ylabel("Training MSE")
-plot.title("Neural Network Training Loss")
-plot.grid(True)
-plot.show()
+plt.plot(history)
+plt.xlabel("Epoch")
+plt.ylabel("Training MSE")
+plt.title("Neural Network Training Loss")
+plt.grid(True)
+plt.show()
 
-#Different structure of the network
-
+# Different structure of the network
 
 architectures = [[1, 50, 1], [1, 100, 100, 1]]
 
 for layers in architectures:
     torch.manual_seed(2026)
-
     model = NeuralNetwork(layers)
     history = model.train(X_train, y_train, epochs=300, learning_rate=0.01, batch_size=10)
 
@@ -52,57 +49,47 @@ for layers in architectures:
     print(f"Train MSE: {train_mse:.6f}")
     print(f"Validation MSE: {val_mse:.6f}")
 
-    plot.plot(history, label=str(layers))
+    plt.plot(history, label=str(layers))
 
-plot.xlabel("Epoch")
-plot.ylabel("Training MSE")
-plot.title("Different Neural Network Structures")
-plot.legend()
-plot.grid(True)
-plot.show()
+plt.xlabel("Epoch")
+plt.ylabel("Training MSE")
+plt.title("Different Neural Network Structures")
+plt.legend()
+plt.grid(True)
+plt.show()
 
+# Different learning rate
 
-#Different learning rate
-
-learning_Rate_1B = [0.0001,0.001,0.01,0.1]
-
+learning_Rate_1B = [0.0001, 0.001, 0.01, 0.1]
 
 for L1B in learning_Rate_1B:
-
     torch.manual_seed(2026)
-
-
     model = NeuralNetwork([1,50,1])
+    history = model.train(X_train, y_train, epochs=300, learning_rate=L1B, batch_size=10)
 
-    history = model.train(X_train,y_train,epochs= 300,learning_rate = L1B, batch_size = 10)
-
-    train_mse = MSE(y_train,model.predict(X_train)).item()
-
-    val_mse= MSE(y_val,model.predict(X_val)).item()
+    train_mse = MSE(y_train, model.predict(X_train)).item()
+    val_mse = MSE(y_val, model.predict(X_val)).item()
 
     print("Learning rate ", L1B)
-
     print("Train MSE", train_mse)
+    print("Val MSE", val_mse)
 
-    print("Val MSE",val_mse)
+    plt.plot(history, label=f"lr={L1B}")
 
-    plot.plot(history, label=f"lr={L1B}")
+plt.xlabel("Epoch")
+plt.ylabel("Training MSE")
+plt.title("Different Learning Rates")
+plt.ylim(0, 0.2)
+plt.legend()
+plt.grid(True)
+plt.show()
 
-plot.xlabel("Epoch")
-plot.ylabel("Training MSE")
-plot.title("Different Learning Rates")
-plot.ylim(0, 0.2)
-plot.legend()
-plot.grid(True)
-plot.show()
-#Adam
+# Adam
 
 learning_Rate_Adam = [0.0001, 0.001, 0.01]
 
 for lr in learning_Rate_Adam:
-
     torch.manual_seed(2026)
-
     model = NeuralNetwork([1,50,1])
 
     m_w = [torch.zeros_like(w) for w in model.weights]
@@ -117,16 +104,13 @@ for lr in learning_Rate_Adam:
     history = []
 
     for epoch in range(300):
-
         indices = torch.randperm(X_train.shape[0])
 
         for batch in indices.split(10):
-
             model.backpropagation(X_train[batch], y_train[batch])
             t += 1
 
             for i in range(len(model.weights)):
-
                 gw = model.grad_weights[i]
                 gb = model.grad_biases[i]
 
@@ -154,28 +138,21 @@ for lr in learning_Rate_Adam:
     print("Train MSE:", train_mse)
     print("Val MSE:", val_mse)
 
-    plot.plot(history, label=f"Adam lr={lr}")
+    plt.plot(history, label=f"Adam lr={lr}")
 
-plot.xlabel("Epoch")
-plot.ylabel("Training MSE")
-plot.title("Adam Learning Rates")
-plot.legend()
-plot.grid(True)
-plot.show()
+plt.xlabel("Epoch")
+plt.ylabel("Training MSE")
+plt.title("Adam Learning Rates")
+plt.legend()
+plt.grid(True)
+plt.show()
 
-
-
-#RMS
-
-
-
+# RMS
 
 learning_Rate_RMS = [0.0001, 0.001, 0.01]
 
 for lr in learning_Rate_RMS:
-
     torch.manual_seed(2026)
-
     model = NeuralNetwork([1,50,1])
 
     v_w = [torch.zeros_like(w) for w in model.weights]
@@ -186,15 +163,12 @@ for lr in learning_Rate_RMS:
     history = []
 
     for epoch in range(300):
-
         indices = torch.randperm(X_train.shape[0])
 
         for batch in indices.split(10):
-
             model.backpropagation(X_train[batch], y_train[batch])
 
             for i in range(len(model.weights)):
-
                 gw = model.grad_weights[i]
                 gb = model.grad_biases[i]
 
@@ -213,23 +187,20 @@ for lr in learning_Rate_RMS:
     print("Train MSE:", train_mse)
     print("Val MSE:", val_mse)
 
-    plot.plot(history, label=f"RMS lr={lr}")
+    plt.plot(history, label=f"RMS lr={lr}")
 
-plot.xlabel("Epoch")
-plot.ylabel("Training MSE")
-plot.title("RMSprop Learning Rates")
-plot.legend()
-plot.grid(True)
-plot.show()
+plt.xlabel("Epoch")
+plt.ylabel("Training MSE")
+plt.title("RMSprop Learning Rates")
+plt.legend()
+plt.grid(True)
+plt.show()
 
-
-
-#Full Batch Gradient Descent
+# Full Batch Gradient Descent
 
 torch.manual_seed(2026)
 
 model = NeuralNetwork([1,50,1])
-
 history = model.train(X_train, y_train, epochs=300, learning_rate=0.01, batch_size=X_train.shape[0])
 
 train_mse = MSE(y_train, model.predict(X_train)).item()
@@ -238,15 +209,15 @@ val_mse = MSE(y_val, model.predict(X_val)).item()
 print("GD Train MSE:", train_mse)
 print("GD Val MSE:", val_mse)
 
-plot.plot(history, label="Full Batch GD")
-plot.xlabel("Epoch")
-plot.ylabel("Training MSE")
-plot.title("Full Batch Gradient Descent")
-plot.legend()
-plot.grid(True)
-plot.show()
+plt.plot(history, label="Full Batch GD")
+plt.xlabel("Epoch")
+plt.ylabel("Training MSE")
+plt.title("Full Batch Gradient Descent")
+plt.legend()
+plt.grid(True)
+plt.show()
 
-#OLS Comparison
+# OLS Comparison
 
 degree = 11
 
@@ -268,12 +239,11 @@ print("OLS Degree:", degree)
 print("OLS Train MSE:", train_mse)
 print("OLS Validation MSE:", val_mse)
 
-#Backpropagation Gradient Check
+# Backpropagation Gradient Check
 
 torch.manual_seed(2026)
 
 check_model = NeuralNetwork([1,50,1])
-
 check_model.backpropagation(X_train[:8], y_train[:8])
 
 W = [w.clone().detach().requires_grad_(True) for w in check_model.weights]
@@ -294,12 +264,12 @@ max_error = max((g1-g2).abs().max().item() for g1,g2 in zip(grad_manual,grad_aut
 
 print("Maximum Gradient Difference:", max_error)
 
-#Final Model Comparison
+# Final Model Comparison
 
 X_full = torch.cat([X_train, X_val], dim=0)
 y_full = torch.cat([y_train, y_val], dim=0)
 
-#Final Neural Network with RMSprop
+# Final Neural Network with RMSprop
 
 torch.manual_seed(2026)
 
@@ -313,15 +283,12 @@ beta = 0.9
 eps = 1e-8
 
 for epoch in range(300):
-
     indices = torch.randperm(X_full.shape[0])
 
     for batch in indices.split(10):
-
         final_model.backpropagation(X_full[batch], y_full[batch])
 
         for i in range(len(final_model.weights)):
-
             gw = final_model.grad_weights[i]
             gb = final_model.grad_biases[i]
 
@@ -337,8 +304,7 @@ nn_test_mse = MSE(y_test, final_model.predict(X_test)).item()
 print("Final NN Train MSE:", nn_train_mse)
 print("Final NN Test MSE:", nn_test_mse)
 
-
-#Final OLS Comparison
+# Final OLS Comparison
 
 degree = 11
 
@@ -359,33 +325,27 @@ ols_test_mse = MSE(y_test.double(), ols_test_pred).item()
 print("Final OLS Train MSE:", ols_train_mse)
 print("Final OLS Test MSE:", ols_test_mse)
 
-
-#Final Prediction Comparison
+# Final Prediction Comparison
 
 x_plot = torch.linspace(-1, 1, 500).reshape(-1, 1)
-
 x_plot_scaled = (x_plot - mu) / std
 
 nn_prediction = final_model.predict(x_plot_scaled)
 
 X_plot_ols = torch.vander(x_plot.flatten().double(), N=degree+1, increasing=True)
-
 ols_prediction = X_plot_ols @ beta_ols
 
-plot.figure(figsize=(9,5))
-
-plot.plot(x_plot, Rungefunction(x_plot), label="True Runge Function")
-plot.plot(x_plot, nn_prediction, label="Neural Network RMSprop")
-plot.plot(x_plot, ols_prediction, label="OLS Degree 11")
-
-plot.scatter(X_test * std + mu, y_test, label="Test Data", s=15)
-
-plot.xlabel("x")
-plot.ylabel("y")
-plot.title("Neural Network vs OLS Regression")
-plot.legend()
-plot.grid(True)
-plot.show()
+plt.figure(figsize=(9,5))
+plt.plot(x_plot, Rungefunction(x_plot), label="True Runge Function")
+plt.plot(x_plot, nn_prediction, label="Neural Network RMSprop")
+plt.plot(x_plot, ols_prediction, label="OLS Degree 11")
+plt.scatter(X_test * std + mu, y_test, label="Test Data", s=15)
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Neural Network vs OLS Regression")
+plt.legend()
+plt.grid(True)
+plt.show()
 
 
 """
