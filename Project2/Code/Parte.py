@@ -170,49 +170,263 @@ if __name__ == "__main__":
     plt.show()
 
 
-"""
-Train: torch.Size([54000, 784]) Validation: torch.Size([6000, 784]) Test: torch.Size([10000, 784])
+    #Different learning rates
 
- Logistic Regression
-Epoch 1: Cross Entropy = 0.6013, Validation Accuracy = 0.8988
-Epoch 2: Cross Entropy = 0.3850, Validation Accuracy = 0.9095
-Epoch 3: Cross Entropy = 0.3509, Validation Accuracy = 0.9113
-Epoch 4: Cross Entropy = 0.3331, Validation Accuracy = 0.9163
-Epoch 5: Cross Entropy = 0.3217, Validation Accuracy = 0.9178
-Validation Accuracy: 0.9178333282470703
+    Learning_Rata_E = [0.001, 0.01, 0.1, 0.5, 0.9]
+    learning_accuracy = []
 
- Neural Network ReLU
-Epoch 1: Cross Entropy = 0.4979, Validation Accuracy = 0.9167
-Epoch 2: Cross Entropy = 0.2722, Validation Accuracy = 0.9347
-Epoch 3: Cross Entropy = 0.2282, Validation Accuracy = 0.9430
-Epoch 4: Cross Entropy = 0.1988, Validation Accuracy = 0.9487
-Epoch 5: Cross Entropy = 0.1777, Validation Accuracy = 0.9530
-Validation Accuracy: 0.953000009059906
+    for lr in Learning_Rata_E:
+        torch.manual_seed(2026)
 
- Neural Network Leaky ReLU
-Epoch 1: Cross Entropy = 0.4974, Validation Accuracy = 0.9165
-Epoch 2: Cross Entropy = 0.2729, Validation Accuracy = 0.9343
-Epoch 3: Cross Entropy = 0.2289, Validation Accuracy = 0.9437
-Epoch 4: Cross Entropy = 0.1995, Validation Accuracy = 0.9490
-Epoch 5: Cross Entropy = 0.1783, Validation Accuracy = 0.9532
-Validation Accuracy: 0.953166663646698
+        #Use Neurarnetwork 2, since there has the best result.
+        model = ClassificationNetwork([784,64,64,10])
+        model.set_activation("relu")
 
- Neural Network 2 Layers
-Epoch 1: Cross Entropy = 0.5039, Validation Accuracy = 0.9083
-Epoch 2: Cross Entropy = 0.2403, Validation Accuracy = 0.9443
-Epoch 3: Cross Entropy = 0.1874, Validation Accuracy = 0.9538
-Epoch 4: Cross Entropy = 0.1540, Validation Accuracy = 0.9583
-Epoch 5: Cross Entropy = 0.1310, Validation Accuracy = 0.9633
-Validation Accuracy: 0.9633333086967468
+        history = train_classification(model, X_train, y_train_onehot, X_val, y_val, epochs=5, learning_rate=lr, batch_size=128)
 
- Neural Network L2
-Epoch 1: Cross Entropy = 0.4979, Validation Accuracy = 0.9170
-Epoch 2: Cross Entropy = 0.2723, Validation Accuracy = 0.9343
-Epoch 3: Cross Entropy = 0.2282, Validation Accuracy = 0.9428
-Epoch 4: Cross Entropy = 0.1987, Validation Accuracy = 0.9485
-Epoch 5: Cross Entropy = 0.1775, Validation Accuracy = 0.9527
-Validation Accuracy: 0.9526666402816772
-Best Neural Network: Neural Network 2 Layers
-Logistic Regression Test Accuracy: 0.9156000018119812
-Neural Network 2 Layers Test Accuracy: 0.9620000123977661
-"""
+        val_pred = model.predict(X_val).argmax(dim=1)
+        val_accuracy = (val_pred == y_val).float().mean().item()
+
+        learning_accuracy.append(val_accuracy)
+
+        print("Learning Rate:", lr)
+        print("Validation Accuracy:", val_accuracy)
+
+        plt.plot(history, label=f"lr={lr}")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Training Cross Entropy")
+    plt.title("Different Learning Rates")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+    #Different gamma
+
+    Gamma_E = Learning_Rata_E
+
+    plt.plot(Gamma_E, learning_accuracy, marker="o")
+    plt.xlabel("Gamma")
+    plt.ylabel("Validation Accuracy")
+    plt.title("Validation Accuracy vs Gamma")
+    plt.grid(True)
+    plt.show()
+
+
+    #Hidden layer
+
+    Hidden_Layer_E = [1,2,3]
+    hidden_accuracy = []
+
+    for n in Hidden_Layer_E:
+        torch.manual_seed(2026)
+
+        layers = [784] + [64]*n + [10]
+        model = ClassificationNetwork(layers)
+        model.set_activation("relu")
+
+        history = train_classification(model, X_train, y_train_onehot, X_val, y_val, epochs=5, learning_rate=0.1, batch_size=128)
+
+        val_pred = model.predict(X_val).argmax(dim=1)
+        val_accuracy = (val_pred == y_val).float().mean().item()
+
+        hidden_accuracy.append(val_accuracy)
+
+        print("Hidden Layers:", n)
+        print("Validation Accuracy:", val_accuracy)
+
+        plt.plot(history, label=f"{n} Hidden Layers")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Training Cross Entropy")
+    plt.title("Different Hidden Layers")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+    #Validation Accuracy
+
+    plt.plot(Hidden_Layer_E, hidden_accuracy, marker="o")
+    plt.xlabel("Number of Hidden Layers")
+    plt.ylabel("Validation Accuracy")
+    plt.title("Validation Accuracy vs Hidden Layers")
+    plt.xticks(Hidden_Layer_E)
+    plt.grid(True)
+    plt.show()
+
+#Sigmoid
+
+    torch.manual_seed(2026)
+
+    model = ClassificationNetwork([784,64,64,10])
+    model.set_activation("sigmoid")
+
+    history = train_classification(model, X_train, y_train_onehot, X_val, y_val, epochs=5, learning_rate=0.1, batch_size=128)
+
+    val_pred = model.predict(X_val).argmax(dim=1)
+    val_accuracy = (val_pred == y_val).float().mean().item()
+
+    print("Sigmoid Validation Accuracy:", val_accuracy)
+    print("ReLU Validation Accuracy:", validation_results["Neural Network 2 Layers"])
+
+    plt.plot(history, label="Sigmoid")
+    plt.xlabel("Epoch")
+    plt.ylabel("Training Cross Entropy")
+    plt.title("Sigmoid Training Loss")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+    #Different Lambda
+
+    Lambda_E = [0.000001, 0.00001, 0.0001, 0.001]
+    lambda_results = {"L1": [], "L2": []}
+
+    for reg_type in ["L1", "L2"]:
+        for lam in Lambda_E:
+            torch.manual_seed(2026)
+
+            model = ClassificationNetwork([784,64,64,10], reg_type, lam)
+            model.set_activation("relu")
+
+            history = train_classification(model, X_train, y_train_onehot, X_val, y_val, epochs=5, learning_rate=0.5, batch_size=128)
+
+            val_pred = model.predict(X_val).argmax(dim=1)
+            val_accuracy = (val_pred == y_val).float().mean().item()
+
+            lambda_results[reg_type].append(val_accuracy)
+
+            print("Regularization:", reg_type)
+            print("Lambda:", lam)
+            print("Validation Accuracy:", val_accuracy)
+
+
+    #Lambda Comparison
+
+    for reg_type in ["L1", "L2"]:
+        plt.plot(Lambda_E, lambda_results[reg_type], marker="o", label=reg_type)
+
+    plt.xscale("log")
+    plt.xlabel("Lambda")
+    plt.ylabel("Validation Accuracy")
+    plt.title("Different Lambda")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+
+    #Different Hidden Nodes
+
+    Hidden_Nodes_E = [32,64,128]
+    nodes_accuracy = []
+
+    for nodes in Hidden_Nodes_E:
+        torch.manual_seed(2026)
+
+        model = ClassificationNetwork([784,nodes,nodes,10])
+        model.set_activation("relu")
+
+        history = train_classification(model, X_train, y_train_onehot, X_val, y_val, epochs=5, learning_rate=0.5, batch_size=128)
+
+        val_pred = model.predict(X_val).argmax(dim=1)
+        val_accuracy = (val_pred == y_val).float().mean().item()
+
+        nodes_accuracy.append(val_accuracy)
+
+        print("Hidden Nodes:", nodes)
+        print("Validation Accuracy:", val_accuracy)
+
+        plt.plot(history, label=f"{nodes} Nodes")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Training Cross Entropy")
+    plt.title("Different Hidden Nodes")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+    #Validation Accuracy
+
+    plt.plot(Hidden_Nodes_E, nodes_accuracy, marker="o")
+    plt.xlabel("Number of Hidden Nodes")
+    plt.ylabel("Validation Accuracy")
+    plt.title("Validation Accuracy vs Hidden Nodes")
+    plt.xticks(Hidden_Nodes_E)
+    plt.grid(True)
+    plt.show()
+#Scikit vs PyTorch
+
+    from sklearn.neural_network import MLPClassifier
+    import torch.nn as nn
+
+    #Scikit-Learn
+
+    sklearn_model = MLPClassifier(hidden_layer_sizes=(64,64), activation="relu", solver="sgd", learning_rate_init=0.1, batch_size=128, max_iter=5, momentum=0.0, alpha=0.0, random_state=2026)
+
+    sklearn_model.fit(X_train.numpy(), y_train.numpy())
+
+    sklearn_pred = sklearn_model.predict(X_val.numpy())
+    sklearn_accuracy = np.mean(sklearn_pred == y_val.numpy())
+
+    print("Scikit-Learn Validation Accuracy:", sklearn_accuracy)
+
+
+    #PyTorch
+
+    torch.manual_seed(2026)
+
+    pytorch_model = nn.Sequential(nn.Linear(784,64), nn.ReLU(), nn.Linear(64,64), nn.ReLU(), nn.Linear(64,10))
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(pytorch_model.parameters(), lr=0.1)
+
+    pytorch_history = []
+
+    for epoch in range(5):
+        indices = torch.randperm(X_train.shape[0])
+
+        for batch in indices.split(128):
+            optimizer.zero_grad()
+            output = pytorch_model(X_train[batch])
+            loss = criterion(output, y_train[batch])
+            loss.backward()
+            optimizer.step()
+
+        with torch.no_grad():
+            loss = criterion(pytorch_model(X_train), y_train).item()
+            pytorch_history.append(loss)
+
+        print("Epoch:", epoch+1, "Cross Entropy:", loss)
+
+    with torch.no_grad():
+        pytorch_pred = pytorch_model(X_val).argmax(dim=1)
+        pytorch_accuracy = (pytorch_pred == y_val).float().mean().item()
+
+    print("PyTorch Validation Accuracy:", pytorch_accuracy)
+
+
+    #Model Comparison
+
+    print("Own Neural Network:", validation_results["Neural Network 2 Layers"])
+    print("Scikit-Learn:", sklearn_accuracy)
+    print("PyTorch:", pytorch_accuracy)
+
+    plt.plot(sklearn_model.loss_curve_, label="Scikit-Learn")
+    plt.plot(pytorch_history, label="PyTorch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Training Cross Entropy")
+    plt.title("Scikit-Learn vs PyTorch")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+
+
+
+
