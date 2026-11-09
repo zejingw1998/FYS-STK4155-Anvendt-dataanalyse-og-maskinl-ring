@@ -1,49 +1,64 @@
 # FYS-STK4155 – Applied Data Analysis and Machine Learning
 
-**University of Oslo (UiO) · Autumn 2026**
+**University of Oslo (UiO) | Autumn 2026**
 
-This repository contains our course projects, Python implementations, reports and weekly exercises for **FYS-STK4155: Applied Data Analysis and Machine Learning**.
+This repository contains our projects, reports, Python code and weekly exercises for **FYS-STK4155: Applied Data Analysis and Machine Learning**.
 
 ## Contributors
 
 - Zejing Wang
 - Zhenwei Liu
 
-## Repository structure
+## Repository overview
 
-| Directory | Contents |
+| Folder | Description |
 | --- | --- |
-| [Project1](Project1/) | Polynomial regression and model evaluation using OLS, Ridge and Lasso, including resampling and bias–variance analysis of the Runge function. |
-| [Project2](Project2/) | Feed-forward neural networks for regression and MNIST classification, implemented using PyTorch tensors and manual backpropagation. |
-| [Project3](Project3/) | Reserved for the third course project; no project materials have been added yet. |
-| [Week_exercises](Week_exercises/) | Weekly exercises and notebooks covering course topics. |
+| [Project1](Project1/) | Polynomial regression, optimization and statistical model evaluation using the Runge function. |
+| [Project2](Project2/) | Feed-forward neural networks for regression and classification, including the full MNIST dataset. |
+| [Project3](Project3/) | Reserved for Project 3; materials have not been added yet. |
+| [Week_exercises](Week_exercises/) | Weekly exercises and notebooks from the course. |
 
-## Project 1 – Regression analysis
+## Project 1 – Regression Analysis and Optimization for the Runge Function
 
-Project 1 investigates polynomial regression on the Runge function and compares ordinary least squares (OLS), Ridge and Lasso regression, with attention to model complexity, regularization and evaluation.
+In Project 1, we studied polynomial regression using the one-dimensional Runge function. We implemented and compared **Ordinary Least Squares (OLS), Ridge and Lasso regression**, and investigated how polynomial degree, noise, data size and regularization affect prediction error.
 
-- [Project 1 report](Project1/FYS_STK_4155_Project_1_ZejingWang_ZhenweiLiu.pdf)
-- [Project 1 Python code](Project1/Code/)
+We also examined:
 
-## Project 2 – Neural networks for regression and classification
+- Gradient descent and optimization methods: Plain Gradient Descent, Momentum, AdaGrad, RMSprop and Adam.
+- Mini-batch Stochastic Gradient Descent (SGD), learning rates and batch sizes.
+- Bootstrap resampling and the bias–variance trade-off.
+- 5-fold and 10-fold cross-validation for model and hyperparameter selection.
 
-For Project 2, we implemented feed-forward neural networks with our own forward propagation and backpropagation routines. We evaluated different architectures, activation functions, optimization methods and L1/L2 regularization.
+In the final 10-fold cross-validation comparison, OLS and Ridge achieved nearly identical minimum MSE values of approximately **0.01111** and **0.01110**, respectively. Lasso achieved approximately **0.01963**. These results were obtained under the experimental settings described in the report.
 
-The regression experiments compare neural networks with polynomial OLS, Ridge and Lasso models on the Runge function. The classification experiments use the full MNIST handwritten-digit dataset and compare neural networks with a logistic regression baseline.
+**Files:** [Report](Project1/FYS_STK_4155_Project_1_ZejingWang_ZhenweiLiu.pdf) · [Python code](Project1/Code/) · [Figures](Project1/Figures/)
 
-The final neural network achieved **97.39% test accuracy** on MNIST, compared with **91.56%** for logistic regression.
+## Project 2 – Neural Networks for Regression and Classification
 
-- [Project 2 report](Project2/Project2.pdf)
-- [Project 2 README: setup, scripts and results](Project2/README.md)
-- [Project 2 Python code](Project2/Code/)
-- [Project 2 dependencies](Project2/requirements.txt)
+In Project 2, we developed **feed-forward neural networks** using PyTorch tensors, while implementing forward propagation and backpropagation ourselves instead of relying on a predefined network model.
 
-## Running Project 2
+The project includes two main tasks:
 
-Detailed setup and run instructions are in [Project2/README.md](Project2/README.md). For a quick start, run the following commands from the repository root:
+- **Regression:** approximating the Runge function and comparing neural networks with OLS, Ridge and Lasso from Project 1.
+- **Classification:** recognizing handwritten digits from the full MNIST dataset and comparing neural networks with a logistic regression baseline.
+
+We investigated Sigmoid, ReLU and Leaky ReLU; different network depths and widths; gradient descent, SGD, Adam and RMSprop; and L1/L2 regularization. We also compared our manually calculated gradients against PyTorch automatic differentiation.
+
+The final MNIST neural network, with two hidden layers of 128 neurons each, achieved **97.39% test accuracy**, compared with **91.56%** for logistic regression.
+
+**Files:** [Report](Project2/Project2.pdf) · [Detailed README](Project2/README.md) · [Python code](Project2/Code/) · [Requirements](Project2/requirements.txt)
+
+### Running Project 2
+
+Install the dependencies from the repository root:
 
 ```bash
 python -m pip install -r Project2/requirements.txt
+```
+
+Run the scripts from the `Project2/Code` directory:
+
+```bash
 cd Project2/Code
 python Partb.py
 python Partc.py
@@ -51,10 +66,14 @@ python Partd.py
 python Parte.py
 ```
 
-Each script can be run separately. The scripts display plots with Matplotlib, and `Parte.py` can download the MNIST dataset on its first run if the dataset is not already present.
+The scripts can be run separately. They print numerical results and display plots with Matplotlib; the plots are not automatically saved by the scripts. The MNIST script uses `mnist.npz` from its working directory and can download the dataset if it is missing and an internet connection is available.
 
-## Notes
+For the purpose of each script and additional instructions, see the [Project 2 README](Project2/README.md).
 
-The reports contain the experimental settings, numerical results, figures and critical discussions. Where specified in the code, fixed random seeds are used to improve reproducibility.
+## Weekly exercises
 
-This repository was prepared as coursework for FYS-STK4155 at the University of Oslo.
+The [Week_exercises](Week_exercises/) folder contains course exercises and notebooks, organized by week.
+
+## Reproducibility
+
+The project reports document the methods, numerical experiments, figures and conclusions. Fixed random seeds are used where specified in the scripts; numerical results may vary slightly across software versions or computing environments.
