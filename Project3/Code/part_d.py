@@ -6,7 +6,7 @@ from functions import analytical_solution
 from neuralnetwork import NeuralNetwork,trial_solution,cost_function
 
 
-#LLM-assisted: ChatGPT (OpenAI), November 2026. Review, test and declare each assisted part.
+
 
 #Random seed
 
