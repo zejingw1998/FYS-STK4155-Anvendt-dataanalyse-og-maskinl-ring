@@ -95,3 +95,13 @@ plt.title("Maximum Error vs dx")
 plt.legend()
 plt.grid(True)
 plt.show()
+
+
+"""
+t=0.1, nx=10, MSE=8.38165390e-06, Max Error=4.29414003e-03
+t=0.1, nx=100, MSE=8.88374886e-10, Max Error=4.23617430e-05
+t=0.5, nx=10, MSE=7.45081124e-08, Max Error=4.04867691e-04
+t=0.5, nx=100, MSE=8.26584107e-12, Max Error=4.08619615e-06
+t=0.1, Convergence order=2.0059
+t=0.5, Convergence order=1.9960
+"""
