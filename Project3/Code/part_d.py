@@ -25,7 +25,7 @@ results_D = []
 
 #Train one network
 
-#LLM-assisted: ChatGPT (OpenAI), November 2026. Training and comparison function.
+
 def run_model(name,method="pinn",nodes=32,layers=2,activation="tanh",n_points=400,placement="random",w_initial=1.0,w_boundary=1.0,optimizer_name="adam",lr=0.001):
     torch.manual_seed(2026)
 
